@@ -161,6 +161,7 @@ func NewIdentityProvider(p Params) (idp.IdentityProvider, error) {
 	idp := &identityProvider{
 		params:                   p,
 		dialLDAP:                 dialLDAP,
+		dialLDAPS:                dialLDAPS,
 		userQueryAttrs:           userQueryAttrs,
 		groupQueryFilterTemplate: groupQueryFilterTemplate,
 	}
@@ -213,6 +214,7 @@ type identityProvider struct {
 	initParams idp.InitParams
 
 	dialLDAP  func(network, addr string) (ldapConn, error)
+	dialLDAPS func(network, addr string, tlsConfig *tls.Config) (ldapConn, error)
 	network   string
 	address   string
 	baseDN    string
@@ -441,7 +443,15 @@ func (idp *identityProvider) resolveUsername(conn ldapConn, username string) (st
 // dial establishes a connection to the LDAP server and binds as the
 // search user (if specified).
 func (idp *identityProvider) dial() (ldapConn, error) {
-	conn, err := idp.dialLDAP(idp.network, idp.address)
+	var conn ldapConn
+	var err error
+	switch idp.scheme {
+	case "ldap":
+		conn, err = idp.dialLDAP(idp.network, idp.address)
+	case "ldaps":
+		conn, err = idp.dialLDAPS(idp.network, idp.address, &idp.tlsConfig)
+	}
+
 	if err != nil {
 		return nil, errgo.Mask(err)
 	}
