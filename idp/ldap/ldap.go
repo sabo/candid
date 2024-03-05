@@ -182,6 +182,20 @@ func NewIdentityProvider(p Params) (idp.IdentityProvider, error) {
 		}
 		idp.address = net.JoinHostPort(host, port)
 		idp.tlsConfig.ServerName = host
+		idp.scheme = "ldap"
+	case "ldaps":
+		idp.network = "tcp"
+		// It would be nice to use u.Host and u.Port here, but
+		// these aren't available in go 1.6.
+		host, port, _ := net.SplitHostPort(u.Host)
+		if host == "" {
+			// Asume that the URL didn't specify a port.
+			host = u.Host
+			port = "ldaps"
+		}
+		idp.address = net.JoinHostPort(host, port)
+		idp.tlsConfig.ServerName = host
+		idp.scheme = "ldaps"
 	default:
 		// No other schemes are currently supported.
 		return nil, errgo.Newf("unsupported scheme %q", u.Scheme)
@@ -202,6 +216,7 @@ type identityProvider struct {
 	network   string
 	address   string
 	baseDN    string
+	scheme    string
 	tlsConfig tls.Config
 
 	userQueryAttrs           []string
