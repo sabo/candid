@@ -475,6 +475,14 @@ func dialLDAP(network, addr string) (ldapConn, error) {
 	return c, nil
 }
 
+func dialLDAPS(network, addr string, tlsConfig *tls.Config) (ldapConn, error) {
+	c, err := ldap.DialTLS(network, addr, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
 // ldapConn represents the subset of ldap connection methods used
 // by the provider. It is defined so that it can be replaced for testing.
 type ldapConn interface {
