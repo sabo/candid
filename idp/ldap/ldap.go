@@ -455,8 +455,10 @@ func (idp *identityProvider) dial() (ldapConn, error) {
 	if err != nil {
 		return nil, errgo.Mask(err)
 	}
-	if err = conn.StartTLS(&idp.tlsConfig); err != nil {
-		return nil, errgo.Mask(err)
+	if idp.scheme == "ldap" {
+		if err = conn.StartTLS(&idp.tlsConfig); err != nil {
+			return nil, errgo.Mask(err)
+		}
 	}
 	if idp.params.DN != "" {
 		logger.Tracef("LDAP bind: dn=%s", idp.params.DN)
